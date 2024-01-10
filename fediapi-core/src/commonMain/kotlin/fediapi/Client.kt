@@ -2,6 +2,8 @@ package fediapi
 
 import fediapi.http.ApiFailure
 import fediapi.http.HttpResponse
+import fediapi.http.paging.PageExtractor
+import fediapi.http.paging.PagedResponse
 import fediapi.ktor.DefaultJsonClient
 import fediapi.ktor.DefaultKtorClient
 import io.ktor.client.HttpClient
@@ -32,7 +34,7 @@ public expect val DefaultDispatcher: CoroutineDispatcher
  * @param baseUrl
  * @param ktorClient
  */
-public open class Client(
+public abstract class Client(
     baseUrl: String,
     token: String? = null,
     json: Json = DefaultJsonClient,
@@ -56,6 +58,8 @@ public open class Client(
 
     public var token: String? = token
         private set
+
+    public abstract val pageExtractor: PageExtractor
 
     /**
      * Sets the base url for this engine
@@ -83,6 +87,7 @@ public open class Client(
      * @see patch
      * @see put
      * @see delete
+     * @see paged
      *
      * @param route The route to be requested, not a full url. Although this parameter can be any type it will be converted to a [String]
      * @param method The method to use for this request, defaults to [GET][HttpMethod.Get]
@@ -133,6 +138,65 @@ public open class Client(
                 // Something went wrong on our end, usually due to an inaccurate api model
                 // Make an issue here if it's with a preset: https://github.com/wingio/fediapi/issues/new
                 HttpResponse.Failure(ApiFailure(e, body))
+            }
+
+            return@withContext response
+        }
+    }
+
+    /**
+     * Requests a list of items that can be paged through
+     *
+     * @param route The route to be requested, not a full url. Although this parameter can be any type it will be converted to a [String]
+     * @param method The method to use for this request, defaults to [GET][HttpMethod.Get]
+     * @param request Configuration for the request, this is where a body would be specified
+     *
+     * @return [PagedResponse] with the desired return and error types, to be deserialized into.
+     */
+    public suspend inline fun <reified T, reified E> paged(
+        route: Any,
+        method: HttpMethod = HttpMethod.Get,
+        crossinline request: HttpRequestBuilder.() -> Unit
+    ): PagedResponse<T, E> {
+        return withContext(DefaultDispatcher) {
+            var body: String? = null // Holds the raw body text, in case of any failures
+
+            val response = try {
+                val response = ktorClient.request {
+                    url("$baseUrl$route")
+                    this.method = method
+                    token?.let {
+                        header(HttpHeaders.Authorization, token) // Applies the authorization header only if a token is present
+                    }
+                    request() // Apply the users desired configuration
+                }
+
+                if (response.status.isSuccess()) { // Status code in the 2XX range
+                    body = response.bodyAsText() // Save for deserialization
+
+                    when {
+                        response.status == HttpStatusCode.NoContent -> PagedResponse.Empty<T, E>() // Nothing is returned
+
+                        else -> { // Otherwise, attempt to deserialize into a list of type T
+                            val (nextPage, previousPage) = pageExtractor.getPageInfo(response)
+                            PagedResponse.Success(json.decodeFromString<List<T>>(body), nextPage, previousPage)
+                        }
+                    }
+                } else { // Server returned an error
+                    body = response.bodyAsText() // Save for deserialization
+
+                    when {
+                        response.status == HttpStatusCode.Gone -> PagedResponse.Empty() // Nothing is returned
+
+                        E::class.instanceOf(String::class) -> PagedResponse.Error(body as E) // Return the raw body if the error type is a string
+
+                        else -> PagedResponse.Error(json.decodeFromString<E>(body)) // Otherwise, attempt to deserialize into the error type
+                    }
+                }
+            } catch (e: Throwable) {
+                // Something went wrong on our end, usually due to an inaccurate api model
+                // Make an issue here if it's with a preset: https://github.com/wingio/fediapi/issues/new
+                PagedResponse.Failure(ApiFailure(e, body))
             }
 
             return@withContext response

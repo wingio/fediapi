@@ -5,6 +5,9 @@ import fediapi.Client
 import fediapi.http.HttpResponse
 import fediapi.Language
 import fediapi.URL
+import fediapi.http.paging.PageExtractor
+import fediapi.http.paging.PageInfo
+import fediapi.http.paging.PagedResponse
 import fediapi.mastodon.constants.Routes
 import fediapi.mastodon.constants.Scope
 import fediapi.mastodon.model.Application
@@ -19,11 +22,17 @@ import fediapi.ktor.setForm
 import fediapi.ktor.setFormField
 import fediapi.mastodon.model.request.GrantType
 import fediapi.mastodon.model.request.Privacy
+import fediapi.mastodon.util.addPageParams
 
 /**
  * Shortcut for an [HttpResponse] with Mastodon's standard [Error] model
  */
 public typealias MastodonResponse<T> = HttpResponse<T, Error>
+
+/**
+ * Shortcut for a [PagedResponse] with Mastodon's standard [Error] model
+ */
+public typealias PagedMastodonResponse<T> = PagedResponse<T, Error>
 
 /**
  * An "empty" response, actually just "{}"
@@ -43,6 +52,8 @@ public class MastodonClient(
     baseUrl = baseUrl,
     token = if (token == null) null else "${if (!token.startsWith("Bearer")) "Bearer " else ""} $token"
 ) {
+
+    override val pageExtractor: PageExtractor = LinkPageExtractor()
 
     //  ############################################
     //  ###                Apps                  ###
@@ -319,10 +330,8 @@ public class MastodonClient(
      *
      * [More](https://docs.joinmastodon.org/methods/accounts/#statuses)
      *
-     * @param accountId The ID of the [Account] who created the statuses
-     * @param maxId All results returned will be lesser than this ID. In effect, sets an upper bound on results.
-     * @param sinceId All results returned will be greater than this ID. In effect, sets a lower bound on results.
-     * @param minId Returns results immediately newer than this ID. In effect, sets a cursor at this ID and paginates forward.
+     * @param accountId The ID of the [Account] who created the statuses.
+     * @param pageInfo Information about which page to return.
      * @param limit Maximum number of results to return. Defaults to 20 statuses.
      * @param onlyMedia Filter out statuses without attachments.
      * @param excludeReplies Filter out statuses in reply to a different account.
@@ -330,23 +339,19 @@ public class MastodonClient(
      * @param pinned Filter for pinned statuses only. Defaults to `false`, which includes all statuses. Pinned statuses do not receive special priority in the order of the returned results.
      * @param tagged Filter for statuses using a specific hashtag.
      *
-     * @return List of [Status]
+     * @return Page of [Status]
      */
     public suspend fun getAccountStatuses(
         accountId: String,
-        maxId: String? = null,
-        sinceId: String? = null,
-        minId: String? = null,
+        pageInfo: PageInfo? = null,
         limit: Int? = 20,
         onlyMedia: Boolean? = null,
         excludeReplies: Boolean? = null,
         excludeReblogs: Boolean? = null,
         pinned: Boolean? = false,
         tagged: String? = null
-    ): MastodonResponse<List<Status>> = get(Routes.V1.Accounts(accountId).Statuses) {
-        parameter("max_id", maxId)
-        parameter("since_id", sinceId)
-        parameter("min_id", minId)
+    ): PagedMastodonResponse<Status> = paged(Routes.V1.Accounts(accountId).Statuses) {
+        addPageParams(pageInfo)
         parameter("limit", limit)
         parameter("only_media", onlyMedia)
         parameter("exclude_replies", excludeReplies)
@@ -355,16 +360,27 @@ public class MastodonClient(
         parameter("tagged", tagged)
     }
 
+    /**
+     * Accounts which follow the given account, if network is not hidden by the account owner.
+     *
+     * **Required scopes**: None
+     *
+     * **Authorization**: Public
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#followers)
+     *
+     * @param id The ID of the [Account] in the database.
+     * @param pageInfo Information about which page to return.
+     * @param limit Maximum number of results to return (Max 80).
+     *
+     * @return Page of [Account]
+     */
     public suspend fun getAccountFollowers(
         id: String,
-        maxId: String? = null,
-        sinceId: String? = null,
-        minId: String? = null,
+        pageInfo: PageInfo? = null,
         limit: Int? = 40,
-    ): MastodonResponse<List<Account>> = get(Routes.V1.Accounts(id).Followers) {
-        parameter("max_id", maxId)
-        parameter("since_id", sinceId)
-        parameter("min_id", minId)
+    ): PagedMastodonResponse<Account> = paged(Routes.V1.Accounts(id).Followers) {
+        addPageParams(pageInfo)
         parameter("limit", limit)
     }
 

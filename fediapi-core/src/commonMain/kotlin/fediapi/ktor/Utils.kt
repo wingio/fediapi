@@ -1,10 +1,10 @@
 package fediapi.ktor
 
-import io.ktor.client.request.HttpRequestBuilder
+import fediapi.http.paging.PageInfo
+import io.ktor.client.request.*
 import io.ktor.client.request.forms.FormBuilder
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.setBody
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 
