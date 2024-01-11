@@ -9,7 +9,10 @@ import fediapi.mastodon.client.MastodonResponse
 import fediapi.mastodon.client.PagedMastodonResponse
 import fediapi.mastodon.constants.Routes
 import fediapi.mastodon.constants.Scope
+import fediapi.mastodon.model.FeaturedTag
+import fediapi.mastodon.model.Relationship
 import fediapi.mastodon.model.Token
+import fediapi.mastodon.model.UserList
 import fediapi.mastodon.model.account.Account
 import fediapi.mastodon.model.account.CredentialAccount
 import fediapi.mastodon.model.request.Privacy
@@ -150,8 +153,8 @@ public class AccountRequests(
      * @return [Account]
      */
     public suspend fun getAccount(
-        id: String
-    ): MastodonResponse<Account> = client.get(Routes.V1.Accounts(id))
+        accountId: String
+    ): MastodonResponse<Account> = client.get(Routes.V1.Accounts(accountId))
 
     /**
      * Statuses posted to the given account.
@@ -201,19 +204,125 @@ public class AccountRequests(
      *
      * [More](https://docs.joinmastodon.org/methods/accounts/#followers)
      *
-     * @param id The ID of the [Account] in the database.
+     * @param accountId The id of the [Account] to check.
      * @param pageInfo Information about which page to return.
      * @param limit Maximum number of results to return (Max 80).
      *
      * @return Page of [Account]
      */
     public suspend fun getAccountFollowers(
-        id: String,
+        accountId: String,
         pageInfo: PageInfo? = null,
-        limit: Int? = 40,
-    ): PagedMastodonResponse<Account> = client.paged(Routes.V1.Accounts(id).Followers) {
+        limit: Int? = 40
+    ): PagedMastodonResponse<Account> = client.paged(Routes.V1.Accounts(accountId).Followers) {
         addPageParams(pageInfo)
         parameter("limit", limit)
     }
+
+    /**
+     * Accounts which the given account is following, if network is not hidden by the account owner.
+     *
+     * **Required scopes**: None
+     *
+     * **Authorization**: Public
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#following)
+     *
+     * @param accountId The id of the [Account] to check.
+     * @param pageInfo Information about which page to return.
+     * @param limit Maximum number of results per page (Max 80).
+     *
+     * @return Page of [Account]
+     */
+    public suspend fun getAccountFollowing(
+        accountId: String,
+        pageInfo: PageInfo? = null,
+        limit: Int? = 40
+    ): PagedMastodonResponse<Account> = client.paged(Routes.V1.Accounts(accountId).Following) {
+        addPageParams(pageInfo)
+        parameter("limit", limit)
+    }
+
+    /**
+     * Tags featured by this account.
+     *
+     * **Required scopes**: None
+     *
+     * **Authorization**: Public
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#featured_tags)
+     *
+     * @param accountId The id of the desired [Account] to check.
+     *
+     * @return List of [FeaturedTag]
+     */
+    public suspend fun getAccountFeaturedTags(
+        accountId: String
+    ): MastodonResponse<List<FeaturedTag>> = client.get(Routes.V1.Accounts(accountId).FeaturedTags)
+
+    /**
+     * User lists that you have added this account to.
+     *
+     * **Required scopes**: [read:lists][Scope.Read.Lists]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#lists)
+     *
+     * @param accountId The id of the desired [Account] to check.
+     *
+     * @return List of [UserList]
+     */
+    public suspend fun getListsWithAccount(
+        accountId: String
+    ): MastodonResponse<List<UserList>> = client.get(Routes.V1.Accounts(accountId).Lists)
+
+    /**
+     * Follow the given account. Can also be used to update whether to show reblogs or enable notifications.
+     *
+     * **Required scopes**: [write:follows][Scope.Write.Follows]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#follow)
+     *
+     * @param accountId The id of the desired [Account] to follow.
+     * @param reblogs Receive this account’s reblogs in home timeline?
+     * @param notify Receive notifications when this account posts a status?
+     * @param languages Filter received statuses for these languages. If not provided, you will receive this account’s posts in all languages.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun followAccount(
+        accountId: String,
+        reblogs: Boolean = true,
+        notify: Boolean = false,
+        languages: List<Language>? = null
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Follow) {
+        setForm {
+            append("reblogs", reblogs)
+            append("notify", notify)
+            languages?.let {
+                append("languages[]", languages)
+            }
+        }
+    }
+
+    /**
+     * Unfollow the given account.
+     *
+     * **Required scopes**: [write:follows][Scope.Write.Follows]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#unfollow)
+     *
+     * @param accountId The id of the desired [Account] to unfollow.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun unfollowAccount(
+        accountId: String
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Unfollow)
 
 }
