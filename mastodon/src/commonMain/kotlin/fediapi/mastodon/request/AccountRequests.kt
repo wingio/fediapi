@@ -4,15 +4,13 @@ import fediapi.Language
 import fediapi.http.paging.PageInfo
 import fediapi.ktor.appendFile
 import fediapi.ktor.setForm
+import fediapi.ktor.setFormField
 import fediapi.mastodon.client.MastodonClient
 import fediapi.mastodon.client.MastodonResponse
 import fediapi.mastodon.client.PagedMastodonResponse
 import fediapi.mastodon.constants.Routes
 import fediapi.mastodon.constants.Scope
-import fediapi.mastodon.model.FeaturedTag
-import fediapi.mastodon.model.Relationship
-import fediapi.mastodon.model.Token
-import fediapi.mastodon.model.UserList
+import fediapi.mastodon.model.*
 import fediapi.mastodon.model.account.Account
 import fediapi.mastodon.model.account.CredentialAccount
 import fediapi.mastodon.model.request.Privacy
@@ -324,5 +322,263 @@ public class AccountRequests(
     public suspend fun unfollowAccount(
         accountId: String
     ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Unfollow)
+
+    /**
+     * Remove the given account from your followers.
+     *
+     * **Required scopes**: [write:follows][Scope.Write.Follows]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#remove_from_followers)
+     *
+     * @param accountId The id of the account to remove from your followers.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun removeAccountFromFollowers(
+        accountId: String
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).RemoveFromFollowers)
+
+    /**
+     * Block the given account.
+     *
+     * **Required scopes**: [write:blocks][Scope.Write.Blocks]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#block)
+     *
+     * @param accountId The id of the account to block.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun blockAccount(
+        accountId: String
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Block)
+
+    /**
+     * Unblock the given account.
+     *
+     * **Required scopes**: [write:blocks][Scope.Write.Blocks]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#unblock)
+     *
+     * @param accountId The id of the account to unblock.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun unblockAccount(
+        accountId: String
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Unblock)
+
+    /**
+     * Mute the given account.
+     *
+     * **Required scopes**: [write:mutes][Scope.Write.Mutes]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#mute)
+     *
+     * @param accountId The id of the account to mute.
+     * @param notifications Mute notifications in addition to statuses?
+     * @param duration How long the mute should last, in seconds.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun muteAccount(
+        accountId: String,
+        notifications: Boolean = true,
+        duration: Int = 0
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Mute) {
+        setForm {
+            append("notifications", notifications)
+            append("duration", duration)
+        }
+    }
+
+    /**
+     * Unmute the given account.
+     *
+     * **Required scopes**: [write:mutes][Scope.Write.Mutes]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#unmute)
+     *
+     * @param accountId The id of the account to unmute.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun unmuteAccount(
+        accountId: String
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Unmute)
+
+    /**
+     * Add the given account to the user’s featured profiles.
+     *
+     * **Required scopes**: [write:accounts][Scope.Write.Accounts]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#pin)
+     *
+     * @param accountId The id of the account to feature.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun pinAccount(
+        accountId: String
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Pin)
+
+    /**
+     * Remove the given account from the user’s featured profiles.
+     *
+     * **Required scopes**: [write:accounts][Scope.Write.Accounts]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#unpin)
+     *
+     * @param accountId The id of the account to unpin.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun unpinAccount(
+        accountId: String
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Unpin)
+
+    /**
+     * Sets a private note on a user.
+     *
+     * **Required scopes**: [write:accounts][Scope.Write.Accounts]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#note)
+     *
+     * @param accountId The id of the account to leave a note on.
+     * @param note The text of the note, leave blank or don't specify in order to clear it.
+     *
+     * @return [Relationship]
+     */
+    public suspend fun setPrivateNote(
+        accountId: String,
+        note: String?
+    ): MastodonResponse<Relationship> = client.post(Routes.V1.Accounts(accountId).Note) {
+        note?.let { setFormField("comment", note) }
+    }
+
+    /**
+     * Find out whether the given accounts are followed, blocked, muted, etc.
+     *
+     * **Required scopes**: [read:follows][Scope.Read.Follows]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#relationships)
+     *
+     * @param accountIds Check relationships for the provided account IDs.
+     * @param withSuspended Whether relationships should be returned for suspended users.
+     *
+     * @return List of [Relationship]
+     */
+    public suspend fun getRelationships(
+        accountIds: List<String>,
+        withSuspended: Boolean = false
+    ): MastodonResponse<List<Relationship>> = client.get(Routes.V1.Accounts.Relationships) {
+        parameter("id[]", accountIds)
+        parameter("with_suspended", withSuspended)
+    }
+
+    /**
+     * Obtain a list of all accounts that follow a given account, filtered for accounts you follow.
+     *
+     * **Required scopes**: [read:follows][Scope.Read.Follows]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#familiar_followers)
+     *
+     * @param accountIds Find familiar followers for the provided account IDs.
+     *
+     * @return List of [FamiliarFollowers]
+     */
+    public suspend fun getFamiliarFollowers(
+        accountIds: List<String>
+    ): MastodonResponse<List<FamiliarFollowers>> = client.get(Routes.V1.Accounts.FamiliarFollowers) {
+        parameter("id[]", accountIds)
+    }
+
+    /**
+     * Search for matching accounts by username or display name.
+     *
+     * **Required scopes**: [read:accounts][Scope.Read.Accounts]
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#search)
+     *
+     * @param query Search query for accounts.
+     * @param limit Maximum number of results (Max 80).
+     * @param offset Skip the first n results.
+     * @param resolve Attempt WebFinger lookup. Use this when [query] is an exact address.
+     * @param following Limit the search to users you are following.
+     *
+     * @return List of [Account]
+     */
+    public suspend fun search(
+        query: String,
+        limit: Int = 40,
+        offset: Int? = null,
+        resolve: Boolean = false,
+        following: Boolean = false
+    ): MastodonResponse<List<Account>> = client.get(Routes.V1.Accounts.Search) {
+        parameter("q", query)
+        parameter("limit", limit)
+        parameter("offset", offset)
+        parameter("resolve", resolve)
+        parameter("following", following)
+    }
+
+    /**
+     * Quickly lookup a username to see if it is available, skipping WebFinger resolution.
+     *
+     * **Required scopes**: None
+     *
+     * **Authorization**: Public
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/#lookup)
+     *
+     * @param acct The username or Webfinger address to lookup.
+     *
+     * @return [Account]
+     */
+    public suspend fun lookup(
+        acct: String
+    ): MastodonResponse<Account> = client.get(Routes.V1.Accounts.Lookup) {
+        parameter("acct", acct)
+    }
+
+    /**
+     * Get the identity proofs for a given user.
+     *
+     * **Required scopes**: None
+     *
+     * **Authorization**: User
+     *
+     * [More](https://docs.joinmastodon.org/methods/accounts/$identity_proofs)
+     *
+     * @param accountId The id of the account whose identity proofs you want to view.
+     *
+     * @return List of [IdentityProof]
+     */
+    @Deprecated("Deprecated since Mastodon 3.5.0, will return an empty list.")
+    public suspend fun getIdentityProofs(
+        accountId: String
+    ): MastodonResponse<List<IdentityProof>> = client.get(Routes.V1.Accounts(accountId).IdentityProofs)
 
 }
