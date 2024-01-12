@@ -1,4 +1,4 @@
-package fediapi.mastodon.request
+package fediapi.mastodon.requests.account
 
 import fediapi.Language
 import fediapi.http.paging.PageInfo

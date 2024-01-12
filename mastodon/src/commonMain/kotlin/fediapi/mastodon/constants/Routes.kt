@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName", "PropertyName")
+@file:Suppress("FunctionName", "PropertyName", "ConstPropertyName")
 
 package fediapi.mastodon.constants
 
@@ -52,6 +52,8 @@ public object Routes {
                 public val Lookup: String = "$Accounts/lookup"
             }
         }
+
+        public const val Bookmarks: String = "/api/v1/bookmarks"
 
         public object Apps {
             override fun toString(): String = "/api/v1/apps"

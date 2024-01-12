@@ -1,4 +1,4 @@
-package fediapi.mastodon.request
+package fediapi.mastodon.requests.apps
 
 import fediapi.ktor.setFormField
 import fediapi.mastodon.client.EmptyResponse

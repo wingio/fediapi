@@ -1,32 +1,15 @@
 package fediapi.mastodon.client
 
-import io.ktor.client.request.parameter
 import fediapi.Client
 import fediapi.http.HttpResponse
-import fediapi.Language
-import fediapi.URL
 import fediapi.http.paging.PageExtractor
-import fediapi.http.paging.PageInfo
 import fediapi.http.paging.PagedResponse
-import fediapi.mastodon.constants.Routes
-import fediapi.mastodon.constants.Scope
-import fediapi.mastodon.model.Application
 import fediapi.mastodon.model.Error
-import fediapi.mastodon.model.Token
-import fediapi.mastodon.model.account.Account
-import fediapi.mastodon.model.account.CredentialAccount
-import fediapi.mastodon.model.status.Status
-import fediapi.mastodon.util.appendFieldsHash
-import fediapi.ktor.appendFile
-import fediapi.ktor.setForm
-import fediapi.ktor.setFormField
-import fediapi.mastodon.model.request.GrantType
-import fediapi.mastodon.model.request.Privacy
-import fediapi.mastodon.request.AccountRequests
-import fediapi.mastodon.request.AppsRequests
-import fediapi.mastodon.request.EmailRequests
-import fediapi.mastodon.request.OauthRequests
-import fediapi.mastodon.util.addPageParams
+import fediapi.mastodon.requests.account.AccountRequests
+import fediapi.mastodon.requests.apps.AppRequests
+import fediapi.mastodon.requests.apps.EmailRequests
+import fediapi.mastodon.requests.apps.OauthRequests
+import fediapi.mastodon.requests.account.BookmarkRequests
 
 /**
  * Shortcut for an [HttpResponse] with Mastodon's standard [Error] model
@@ -60,14 +43,19 @@ public class MastodonClient(
     override val pageExtractor: PageExtractor = LinkPageExtractor()
 
     /**
-     * Register client applications that can be used to obtain OAuth tokens.
+     * Methods concerning accounts and profiles.
      */
-    public val apps: AppsRequests = AppsRequests(this)
+    public val accounts: AccountRequests = AccountRequests(this)
 
     /**
-     * Generate and manage OAuth tokens.
+     * View your bookmarks.
      */
-    public val oauth: OauthRequests = OauthRequests(this)
+    public val bookmarks: BookmarkRequests = BookmarkRequests(this)
+
+    /**
+     * Register client applications that can be used to obtain OAuth tokens.
+     */
+    public val apps: AppRequests = AppRequests(this)
 
     /**
      * Request a new confirmation email, potentially to a new email address.
@@ -75,8 +63,8 @@ public class MastodonClient(
     public val emails: EmailRequests = EmailRequests(this)
 
     /**
-     * Methods concerning accounts and profiles.
+     * Generate and manage OAuth tokens.
      */
-    public val accounts: AccountRequests = AccountRequests(this)
+    public val oauth: OauthRequests = OauthRequests(this)
 
 }

@@ -1,4 +1,4 @@
-package fediapi.mastodon.request
+package fediapi.mastodon.requests.apps
 
 import fediapi.URL
 import fediapi.ktor.setForm
@@ -13,7 +13,7 @@ import fediapi.mastodon.model.Application
  *
  * @param client Client used to make requests
  */
-public class AppsRequests(
+public class AppRequests(
     private val client: MastodonClient
 ) {
 

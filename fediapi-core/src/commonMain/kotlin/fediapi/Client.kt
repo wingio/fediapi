@@ -156,7 +156,7 @@ public abstract class Client(
     public suspend inline fun <reified T, reified E> paged(
         route: Any,
         method: HttpMethod = HttpMethod.Get,
-        crossinline request: HttpRequestBuilder.() -> Unit
+        crossinline request: HttpRequestBuilder.() -> Unit = {}
     ): PagedResponse<T, E> {
         return withContext(DefaultDispatcher) {
             var body: String? = null // Holds the raw body text, in case of any failures
