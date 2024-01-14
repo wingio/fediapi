@@ -96,7 +96,7 @@ public class AccountRequests(
      * @param discoverable Whether the account should be shown in the profile directory.
      * @param hideCollections Whether to hide followers and followed accounts.
      * @param indexable Whether public posts should be searchable to anyone.
-     * @param fields New fields to display on a profile
+     * @param fields New fields to display on a profile, use an empty map to clear all.
      * @param statusPrivacy Default post privacy for authored statuses.
      * @param statusSensitive Whether to mark authored statuses as sensitive by default.
      * @param statusLanguage Default language to use for authored statuses (ISO 6391)

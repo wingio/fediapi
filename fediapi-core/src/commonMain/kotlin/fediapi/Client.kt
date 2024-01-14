@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 /**
- * Default dispatcher to use for sending api requests
+ * Default dispatcher to use when sending api requests
  */
 public expect val DefaultDispatcher: CoroutineDispatcher
 
@@ -42,23 +42,32 @@ public abstract class Client(
 ) {
 
     /**
-     * The base url used to make requests
+     * The base url used to make requests.
      */
     public var baseUrl: String = baseUrl
         private set
 
     /**
-     * The [HttpClient] used to execute requests
+     * The [HttpClient] used to execute requests.
      */
     public var ktorClient: HttpClient = ktorClient
         private set
 
+    /**
+     * The json config used to deserialize api models.
+     */
     public var json: Json = json
         private set
 
+    /**
+     * The token used to authorize requests, not required for all requests.
+     */
     public var token: String? = token
         private set
 
+    /**
+     * Used to extract information that can be used for paging.
+     */
     public abstract val pageExtractor: PageExtractor
 
     /**

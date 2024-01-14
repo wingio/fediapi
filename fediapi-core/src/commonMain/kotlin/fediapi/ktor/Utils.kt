@@ -19,12 +19,22 @@ public fun HttpRequestBuilder.setForm(formBuilder: FormBuilder.() -> Unit) {
     )
 }
 
+/**
+ * Sets the body to a MultiPart Form with a single field, note that this can only be used once per request.
+ */
 public fun HttpRequestBuilder.setFormField(key: String, value: String) {
     setForm {
         append(key, value)
     }
 }
 
+/**
+ * Appends a file to a form
+ *
+ * @param key The form fields key
+ * @param bytes The file content
+ * @param fileName The name of the file, defaults to [key]
+ */
 public fun FormBuilder.appendFile(
     key: String,
     bytes: ByteArray,

@@ -4,6 +4,12 @@ import fediapi.http.paging.PageInfo
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.FormBuilder
 
+/**
+ * Formats the [fields] map into form fields
+ *
+ * @param fields The fields to append, use an empty map to clear the fields
+ * @param prefix The name of the form input for the fields
+ */
 internal fun FormBuilder.appendFieldsHash(
     fields: Map<String, String>,
     prefix: String = "fields_attributes"

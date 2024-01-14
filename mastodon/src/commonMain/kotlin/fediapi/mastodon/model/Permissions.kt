@@ -64,27 +64,27 @@ public class Permissions(
         /**
          * Allows users to block e-mail providers and IP addresses.
          */
-        MANAGE_BLOCKS( 0x80),
+        MANAGE_BLOCKS(0x80),
 
         /**
          * Allows users to review trending content and update hashtag settings.
          */
-        MANAGE_TAXONOMIES( 0x100),
+        MANAGE_TAXONOMIES(0x100),
 
         /**
          * Allows users to review appeals against moderation actions.
          */
-        MANAGE_APPEALS( 0x200),
+        MANAGE_APPEALS(0x200),
 
         /**
          * Allows users to view other users’ details and perform moderation actions against them.
          */
-        MANAGE_USERS( 0x400),
+        MANAGE_USERS(0x400),
 
         /**
          * Allows users to browse and deactivate invite links.
          */
-        MANAGE_INVITES( 0x800),
+        MANAGE_INVITES(0x800),
 
         /**
          * Allows users to change server rules.
@@ -275,7 +275,7 @@ public class Permissions(
 
     }
 
-    internal object Serializer: KSerializer<Permissions> {
+    internal object Serializer : KSerializer<Permissions> {
 
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Permissions", PrimitiveKind.INT)
 
